@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <!-- 移动端禁止缩放 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title> </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // 自定义Tailwind配置：浅蓝色主题
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        lightBlue: '#e6f7ff', // 主体浅蓝
+                        primaryBlue: '#91d5ff', // 浅蓝辅助色
+                        deepBlue: '#69c0ff', // 深蓝强调色
+                        oceanBlue: '#40a9ff', // 深海蓝
+                        envelope: '#f5fafe', // 信封底色
+                        envelopeBorder: '#d1eaff', // 信封边框色
+                    },
+                    fontFamily: {
+                        poetic: ['"Microsoft YaHei"', 'SimHei', 'serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            /* 自定义工具类 */
+            .hardware-accel {
+                transform: translateZ(0);
+                backface-visibility: hidden;
+                perspective: 1000px;
+            }
+            .bubble-animation {
+                animation: bubble 20s ease-in-out infinite alternate;
+            }
+            .text-fade-in {
+                animation: textFade 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+                opacity: 0;
+            }
+            /* 信封盖打开动画 */
+            .envelope-flap-open {
+                animation: envelopeFlapOpen 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+                transform-origin: bottom center;
+            }
+            /* 白纸飞出动画 */
+            .paper-fly-out {
+                animation: paperFlyOut 1s cubic-bezier(0.17, 0.89, 0.32, 1.28) forwards;
+            }
+            /* 白纸收回动画 */
+            .paper-fly-in {
+                animation: paperFlyIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            }
+            /* 信封盖关闭动画 */
+            .envelope-flap-close {
+                animation: envelopeFlapClose 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+                transform-origin: bottom center;
+            }
+            /* 自定义滚动条样式 */
+            .scrollbar-light-blue {
+                scrollbar-width: thin;
+                scrollbar-color: theme('colors.primaryBlue') theme('colors.lightBlue');
+            }
+            .scrollbar-light-blue::-webkit-scrollbar {
+                width: 6px;
+            }
+            .scrollbar-light-blue::-webkit-scrollbar-track {
+                background: theme('colors.lightBlue');
+                border-radius: 3px;
+            }
+            .scrollbar-light-blue::-webkit-scrollbar-thumb {
+                background-color: theme('colors.primaryBlue');
+                border-radius: 3px;
+                border: 1px solid theme('colors.lightBlue');
+            }
+        }
+
+        /* 气泡动画 */
+        @keyframes bubble {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+                opacity: 0.7;
+            }
+            50% {
+                transform: translate(10px, -30px) scale(1.1);
+                opacity: 1;
+            }
+        }
+
+        /* 文字渐入动画 */
+        @keyframes textFade {
+            0% {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 信封盖打开动画 */
+        @keyframes envelopeFlapOpen {
+            0% {
+                transform: rotateX(0deg);
+            }
+            100% {
+                transform: rotateX(180deg);
+                opacity: 0.8;
+            }
+        }
+
+        /* 白纸飞出动画：从信封内向上+向前飞出，同时展开（调整top值解决遮挡） */
+        @keyframes paperFlyOut {
+            0% {
+                transform: translate(-50%, 0) scale(0.8) rotate(0deg);
+                opacity: 0;
+                top: 100%;
+                z-index: 10;
+                max-height: 90vh; /* 限制最大高度，防止溢出 */
+            }
+            50% {
+                transform: translate(-50%, -55%) scale(0.9) rotate(2deg);
+                opacity: 1;
+                top: 50%;
+                max-height: 90vh;
+            }
+            100% {
+                transform: translate(-50%, -55%) scale(1) rotate(0deg);
+                opacity: 1;
+                top: 50%;
+                z-index: 30;
+                max-height: 90vh;
+            }
+        }
+
+        /* 白纸收回动画：与飞出对称 */
+        @keyframes paperFlyIn {
+            0% {
+                transform: translate(-50%, -55%) scale(1) rotate(0deg);
+                opacity: 1;
+                top: 50%;
+                z-index: 30;
+                max-height: 90vh;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(0.9) rotate(2deg);
+                opacity: 0.8;
+                top: 50%;
+                max-height: 90vh;
+            }
+            100% {
+                transform: translate(-50%, 0) scale(0.8) rotate(0deg);
+                opacity: 0;
+                top: 100%;
+                z-index: 10;
+                max-height: 90vh;
+            }
+        }
+
+        /* 信封盖关闭动画 */
+        @keyframes envelopeFlapClose {
+            0% {
+                transform: rotateX(180deg);
+                opacity: 0.8;
+            }
+            100% {
+                transform: rotateX(0deg);
+                opacity: 1;
+            }
+        }
+
+        /* 气泡样式 */
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 15px rgba(145, 213, 255, 0.6);
+            z-index: 1;
+            transform: translateZ(0);
+        }
+
+        /* 信封样式：3D效果+折叠感 */
+        .envelope {
+            position: relative;
+            width: 280px;
+            height: 180px;
+            background-color: theme('colors.envelope');
+            border: 1px solid theme('colors.envelopeBorder');
+            border-radius: 4px 4px 12px 12px;
+            box-shadow: 0 8px 20px rgba(145, 213, 255, 0.3);
+            cursor: pointer;
+            overflow: hidden;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        /* 信封盖样式 */
+        .envelope-flap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50%;
+            background-color: theme('colors.envelope');
+            border-bottom: 1px solid theme('colors.envelopeBorder');
+            border-radius: 4px 4px 0 0;
+            z-index: 20;
+            transform-style: preserve-3d;
+        }
+
+        /* 信封身体样式：调整内部内容对齐方式，将文字下移 */
+        .envelope-body {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 15;
+            /* 关键修改：将内容从居中改为靠下对齐，下移文字 */
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 2rem; /* 增加底部内边距，控制文字位置 */
+        }
+
+        /* 信封装饰：线条（调整z-index，避免遮挡文字） */
+        .envelope::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background-color: theme('colors.envelopeBorder');
+            z-index: 14; /* 降低z-index，低于envelope-body的15，避免遮挡文字 */
+        }
+
+        /* 信纸样式：模拟真实纸张的质感（修复遮挡+调整内边距） */
+        .paper {
+            position: absolute;
+            left: 50%;
+            top: 100%;
+            transform: translate(-50%, 0);
+            width: 90%;
+            max-width: 500px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(145, 213, 255, 0.4);
+            z-index: 10;
+            opacity: 0;
+            overflow-y: auto; /* 允许滚动，防止文字溢出 */
+            max-height: 90vh; /* 限制最大高度为视口90%，解决遮挡 */
+            padding: 1.5rem; /* 统一内边距，缩短上下距离 */
+        }
+
+        /* 全局过渡 */
+        * {
+            transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+            transition-duration: 0.3s;
+        }
+
+        /* 响应式适配 */
+        @media (max-width: 768px) {
+            body {
+                padding: 2rem 0;
+                background-color: theme('colors.lightBlue');
+            }
+            .envelope {
+                width: 240px;
+                height: 160px;
+            }
+            /* 移动端信封文字底部内边距调整 */
+            .envelope-body {
+                padding-bottom: 1.5rem;
+            }
+            .paper {
+                width: 95%;
+                max-height: 85vh; /* 移动端进一步缩小最大高度 */
+                padding: 1rem !important; /* 移动端更小的内边距 */
+            }
+            .text-mobile-sm {
+                font-size: 0.9rem !important;
+            }
+            /* 移动端白纸飞出动画调整 */
+            @keyframes paperFlyOut {
+                0% {
+                    transform: translate(-50%, 0) scale(0.7) rotate(0deg);
+                    opacity: 0;
+                    top: 100%;
+                    z-index: 10;
+                    max-height: 85vh;
+                }
+                50% {
+                    transform: translate(-50%, -55%) scale(0.85) rotate(1deg);
+                    opacity: 1;
+                    top: 50%;
+                    max-height: 85vh;
+                }
+                100% {
+                    transform: translate(-50%, -55%) scale(0.95) rotate(0deg);
+                    opacity: 1;
+                    top: 50%;
+                    z-index: 30;
+                    max-height: 85vh;
+                }
+            }
+            /* 移动端白纸收回动画调整 */
+            @keyframes paperFlyIn {
+                0% {
+                    transform: translate(-50%, -55%) scale(0.95) rotate(0deg);
+                    opacity: 1;
+                    top: 50%;
+                    z-index: 30;
+                    max-height: 85vh;
+                }
+                50% {
+                    transform: translate(-50%, -50%) scale(0.9) rotate(1deg);
+                    opacity: 0.8;
+                    top: 50%;
+                    max-height: 85vh;
+                }
+                100% {
+                    transform: translate(-50%, 0) scale(0.8) rotate(0deg);
+                    opacity: 0;
+                    top: 100%;
+                    z-index: 10;
+                    max-height: 85vh;
+                }
+            }
+            /* 移动端滚动条优化 */
+            .scrollbar-light-blue::-webkit-scrollbar {
+                width: 4px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .envelope {
+                width: 320px;
+                height: 200px;
+            }
+            /* 大屏信封文字底部内边距调整 */
+            .envelope-body {
+                padding-bottom: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-lightBlue font-poetic overflow-x-hidden relative hardware-accel">
+    <!-- 气泡背景 -->
+    <div id="bubbles" class="absolute inset-0 pointer-events-none"></div>
+
+    <!-- 主容器 -->
+    <div class="container mx-auto px-4 relative z-10 flex flex-col items-center justify-center min-h-screen">
+        <!-- 信封组件 -->
+        <div class="envelope hardware-accel mb-8" id="envelope">
+            <!-- 信封盖 -->
+            <div class="envelope-flap hardware-accel" id="envelopeFlap">
+                <!-- 信封盖上的装饰心形（调整位置，避免与文字重叠） -->
+                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                    <div class="heart-draw w-6 h-6 mx-auto"></div>
+                </div>
+            </div>
+            <!-- 信封身体：移除原有flex样式，使用CSS统一控制 -->
+            <div class="envelope-body">
+                <p class="text-deepBlue text-sm text-center px-4" id="envelopeTip">点击拆开信封</p>
+            </div>
+        </div>
+
+        <!-- 信纸（贺卡内容）：移除原有p-8，改为统一内边距 + 新增滚动条样式类 -->
+        <div class="paper hidden scrollbar-light-blue" id="paper">
+            <!-- 关闭按钮：优化点击区域，增加触控范围 -->
+            <button id="closePaper" class="absolute top-2 right-2 text-gray-500 hover:text-deepBlue transition-colors p-3 rounded-full hover:bg-lightBlue hardware-accel z-50 focus:outline-none focus:ring-2 focus:ring-primaryBlue/50" aria-label="关闭信纸">
+                <span class="text-xl font-bold">×</span>
+            </button>
+
+            <!-- 贺卡标题：缩小底部间距 -->
+            <div class="text-center mb-4 sm:mb-5 pt-1">
+                <h2 class="text-[clamp(1.1rem,4vw,2rem)] font-bold text-deepBlue text-fade-in" style="animation-delay: 0.3s;text-align: left;">致 L S Y:</h2>
+   <p class="text-gray-500 mt-2 text-sm sm:text-base text-fade-in" style="animation-delay: 0.5s; text-align: left;"> 见字如面!</p>
+            </div>
+
+            <!-- 贺卡正文：缩小行间距 -->
+            <div class="space-y-3 sm:space-y-4 text-gray-700 leading-relaxed text-base sm:text-lg text-mobile-sm">
+            
+          
+            
+            
+            
+            
+                <p class="text-fade-in" style="animation-delay: 0.7s">
+                  星霜荏苒间，我们成为好朋友已经59天啦！        </p>
+              
+                <p class="text-fade-in" style="animation-delay: 0.9s">
+                   
+回望这一年，有些期许没能开花，有些脚步还未抵达，那些没说出口的话、没来得及做的事，都成了这一年浅浅的遗憾。然而，纵有点滴怅然，也不会阻挡我奔赴前路的脚步。
+                </p> 
+
+
+                  <p class="text-fade-in" style="animation-delay: 1.1s">
+  世间缘分最悄然。今年最幸之事，莫过于与您相识。您的明媚染透朝夕，从此，我的世界便有了色彩。
+                </p>
+                <p class="text-fade-in" style="animation-delay: 1.3s">
+                    年末已至，千言万语都凝作一句感念。光阴荏苒，岁月沉香。愿过往的遗憾都化作新年的序章，岁岁年年，春暖花开。
+                </p>
+                <p class="text-fade-in" style="animation-delay: 1.4s">
+                    新的一年，祝您万事顺遂，好运常伴，也愿我们的友谊，天长地久！我们，永远年轻，永远热泪盈眶。
+                </p>
+
+              
+            </div>
+
+            <!-- 结尾签名：缩小顶部间距 -->
+            <div class="mt-4 sm:mt-5 text-right">
+                <p class="text-deepBlue font-semibold text-base sm:text-lg text-fade-in" style="animation-delay: 1.7s"> S C</p>
+                <p class="text-gray-500 mt-1 text-sm text-fade-in" style="animation-delay: 1.9s">2025.12.31</p>
+            </div>
+        </div>
+
+        <!-- 👇 仅删除这一行：移除信封下的多余感谢文字元素 -->
+        <!-- <p id="footerText" class="mt-4 text-sm text-gray-400 hidden">感谢有你</p> -->
+    </div>
+
+    <!-- 手绘心形样式（内联，避免样式冲突） -->
+    <style>
+        .heart-draw {
+            position: relative;
+            width: 24px;
+            height: 24px;
+            transform: rotate(45deg);
+            background-color: #69c0ff;
+        }
+        .heart-draw::before,
+        .heart-draw::after {
+            content: "";
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: #69c0ff;
+        }
+        .heart-draw::before {
+            top: -12px;
+            left: 0;
+        }
+        .heart-draw::after {
+            top: 0;
+            left: -12px;
+        }
+        @media (max-width: 768px) {
+            .heart-draw {
+                width: 20px;
+                height: 20px;
+            }
+            .heart-draw::before,
+            .heart-draw::after {
+                width: 20px;
+                height: 20px;
+            }
+            .heart-draw::before {
+                top: -10px;
+            }
+            .heart-draw::after {
+                left: -10px;
+            }
+        }
+    </style>
+
+    <script>
+        // 生成气泡
+        function createBubbles() {
+            const bubblesContainer = document.getElementById('bubbles');
+            const isMobile = window.innerWidth <= 768;
+            const bubbleCount = isMobile ? 8 : 20;
+
+            bubblesContainer.innerHTML = '';
+
+            for (let i = 0; i < bubbleCount; i++) {
+                const bubble = document.createElement('div');
+                bubble.classList.add('bubble', 'bubble-animation');
+                
+                const size = isMobile ? Math.random() * 25 + 5 : Math.random() * 40 + 5;
+                const left = Math.random() * 95 + 2;
+                const top = Math.random() * 95 + 2;
+                const delay = Math.random() * 15;
+                const duration = Math.random() * 20 + 15;
+
+                bubble.style.width = `${size}px`;
+                bubble.style.height = `${size}px`;
+                bubble.style.left = `${left}%`;
+                bubble.style.top = `${top}%`;
+                bubble.style.animationDelay = `${delay}s`;
+                bubble.style.animationDuration = `${duration}s`;
+                bubble.style.opacity = Math.random() * 0.3 + 0.6;
+
+                bubblesContainer.appendChild(bubble);
+            }
+        }
+
+        // 信封交互逻辑
+        function initEnvelopeInteraction() {
+            const envelope = document.getElementById('envelope');
+            const envelopeFlap = document.getElementById('envelopeFlap');
+            const envelopeTip = document.getElementById('envelopeTip');
+            const paper = document.getElementById('paper');
+            const closePaper = document.getElementById('closePaper');
+            // 👇 注释掉这行：因为删除了footerText元素，无需获取
+            // const footerText = document.getElementById('footerText');
+            const isMobile = window.innerWidth <= 768;
+            let hasOpenedOnce = false;
+            let isAnimating = false; // 动画状态锁
+
+            // 修复信封盖关闭后无法再次打开的问题：移除多余的close类
+            function resetEnvelopeFlap() {
+                envelopeFlap.classList.remove('envelope-flap-close');
+                // 强制重置transform和opacity（解决动画残留问题）
+                envelopeFlap.style.transform = 'rotateX(0deg)';
+                envelopeFlap.style.opacity = '1';
+                void envelopeFlap.offsetWidth; // 触发重绘
+            }
+
+            // 打开信封
+            envelope.addEventListener('click', () => {
+                if (isAnimating) return; // 动画中禁止点击
+                isAnimating = true; // 锁定动画状态
+
+                // 重置信封盖样式
+                resetEnvelopeFlap();
+
+                // 隐藏信封提示文字
+                envelopeTip.style.opacity = '0';
+                setTimeout(() => {
+                    envelopeTip.style.display = 'none';
+                }, 300);
+
+                // 👇 注释掉这行：因为删除了footerText元素，无需操作
+                // footerText.classList.add('hidden');
+
+                // 信封盖打开
+                envelopeFlap.classList.add('envelope-flap-open');
+
+                // 延迟显示信纸并执行飞出动画
+                setTimeout(() => {
+                    paper.classList.remove('hidden');
+                    void paper.offsetWidth; // 触发重绘
+                    paper.classList.add('paper-fly-out');
+                    hasOpenedOnce = true;
+                    // 解锁动画状态
+                    setTimeout(() => {
+                        isAnimating = false;
+                    }, 1000); // 与飞出动画时长一致
+                }, 500); // 与信封盖动画同步
+            });
+
+            // 关闭信纸：优化点击逻辑，确保每次点击都生效
+            closePaper.addEventListener('click', (e) => {
+                e.stopPropagation(); // 阻止事件冒泡到信纸
+                if (isAnimating) return; // 动画中禁止点击
+                isAnimating = true; // 锁定动画状态
+
+                // 强制移除飞出动画，添加收回动画
+                paper.classList.remove('paper-fly-out');
+                void paper.offsetWidth; // 触发重绘
+                paper.classList.add('paper-fly-in');
+
+                // 延迟关闭信封盖并显示底部文字
+                setTimeout(() => {
+                    // 隐藏信纸并重置样式
+                    paper.classList.add('hidden');
+                    paper.classList.remove('paper-fly-in');
+                    paper.style.opacity = '0';
+                    paper.style.transform = 'translate(-50%, 0)'; // 重置位置
+
+                    // 信封盖关闭：先移除打开类，再添加关闭类
+                    envelopeFlap.classList.remove('envelope-flap-open');
+                    void envelopeFlap.offsetWidth; // 触发重绘
+                    envelopeFlap.classList.add('envelope-flap-close');
+
+                    // 👇 注释掉这行：因为删除了footerText元素，无需操作
+                    // footerText.classList.remove('hidden');
+
+                    // 重置信封提示文字（如果需要再次打开）
+                    envelopeTip.style.display = 'block';
+                    setTimeout(() => {
+                        envelopeTip.style.opacity = '1';
+                        envelopeTip.textContent = hasOpenedOnce ? '感谢有你' : '点击打开信封';
+                        // 解锁动画状态
+                        isAnimating = false;
+                    }, 300);
+
+                }, 600); // 与信纸收回动画同步
+            });
+
+            // 移动端触摸支持：优化触摸事件，防止穿透
+            if (isMobile) {
+                // 信封触摸事件
+                envelope.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    if (!isAnimating) envelope.click();
+                });
+                // 关闭按钮触摸事件
+                closePaper.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!isAnimating) closePaper.click();
+                });
+                // 信纸触摸事件：防止穿透
+                paper.addEventListener('touchstart', (e) => {
+                    e.stopPropagation();
+                });
+            }
+
+            // 防止点击信纸触发信封事件
+            paper.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
+
+        // 页面加载
+        window.addEventListener('load', () => {
+            createBubbles();
+            initEnvelopeInteraction();
+        });
+
+        // 窗口大小变化
+        window.addEventListener('resize', () => {
+            createBubbles();
+        });
+    </script>
+</body>
+</html>
